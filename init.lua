@@ -104,6 +104,19 @@ end
 -------------------------------------------------------------------------------
 
 
+-------------------------------------------------------------------------------
+-- Called by the "select" watcher wrapper,
+-- that also provides the previous values for the changed attributes.
+-------------------------------------------------------------------------------
+function batt_watch_select(pct)
+    if not hs.battery.isCharging() and pct < 42 then
+        hs.alert.show(string.format(
+        "Plug-in the power, only %d%% left!!", pct.new))
+    end
+end
+-------------------------------------------------------------------------------
+
+
 --------------------------------------------------------------------------
 -- The "changed" watcher wrapper, that provides a table of changed values.
 --------------------------------------------------------------------------
@@ -135,7 +148,27 @@ function batt_wrapper_hist()
         end
     end
     batt_prev = batt_info
+    --io.write(hs.inspect(changed))
+    --hs.alert.show(hs.inspect(changed))
     batt_watch_hist(changed)
+end
+-----------------------------------------------------------------
+
+
+-----------------------------------------------------------------
+-- "select" watcher wrapper, that also provides the previous value.
+-----------------------------------------------------------------
+local batt_prev = {}
+function batt_wrapper_select(selection)
+    batt_info = hs.battery.getAll()
+    changed = {}
+    for key, new_val in pairs(batt_info) do
+        if selection == key and new_val ~= batt_prev[key] then
+            changed[key] = {new = new_val, prev = batt_prev[key]}
+        end
+    end
+    batt_prev = batt_info
+    batt_watch_select(changed)
 end
 -----------------------------------------------------------------
 
@@ -143,12 +176,14 @@ end
 --hs.battery.watcher.new(batt_watch_low):start()
 --hs.hotkey.bind({"cmd", "alt", "ctrl"}, "B", batt_watch_low)
 
-hs.battery.watcher.new(batt_wrapper_changed):start()
-hs.hotkey.bind({"cmd", "alt", "ctrl"}, "B", batt_wrapper_changed)
+--hs.battery.watcher.new(batt_wrapper_changed):start()
+--hs.hotkey.bind({"cmd", "alt", "ctrl"}, "B", batt_wrapper_changed)
 
 --hs.battery.watcher.new(batt_wrapper_hist):start()
 --hs.hotkey.bind({"cmd", "alt", "ctrl"}, "B", batt_wrapper_hist)
 
+--hs.battery.watcher.new(batt_wrapper_select):start()
+--hs.hotkey.bind({"cmd", "alt", "ctrl"}, "B", batt_wrapper_select)
 
 --
 -- Automagic reload!
