@@ -1,18 +1,10 @@
 --
--- Hello World example
---
-hs.hotkey.bind({"cmd", "alt", "ctrl"}, "W", function()
-    hs.alert.show("Hello World!")
-end)
---
-
---
 -- Names: 'Color LCD' and 'DELL U2713HM'
 --
-local internal_orig_brightness = 42
-function screen_handler(name)
-    SCREEN_NAME_INTERNAL = 'Color LCD'
-    SCREEN_NAME_EXTERNAL = 'DELL U2713HM'
+SCREEN_NAME_INTERNAL = 'Color LCD'
+SCREEN_NAME_EXTERNAL = 'DELL U2713HM'
+local internal_original_brightness = 42
+function screen_switch_handler(name)
 
     if name == SCREEN_NAME_INTERNAL then
         hs.alert.show("Internal screen detected!")
@@ -22,17 +14,16 @@ function screen_handler(name)
         internal_original_brightness = hs.brightness.get()
         hs.brightness.set(0)
     end
-
 end
 
 --
--- Screen detection stuff in mirrored mode, where there is only one screen.
+-- Screen detection in mirrored mode, where there is only one screen.
 --
 local prev_name = ''
 function screen_detector_mirrored()
 
+    -- Use hs.screen to get "all" screens.
     all_screens = hs.screen.allScreens()
-
     if #all_screens ~= 1 then
         hs.alert.show("More than one screen detected!\nNot in mirrored mode?")
         return
@@ -44,15 +35,13 @@ function screen_detector_mirrored()
     -- If different than before or initial run
     if name ~= prev_name or not prev_name then
         -- Use external handler to keep this function generic
-        screen_handler(name)
-
+        screen_switch_handler(name)
         -- Store name
         prev_name = name
     end
-
 end
 hs.screen.watcher.new(screen_detector_mirrored):start()
-hs.hotkey.bind({"cmd", "alt", "ctrl"}, "S", screen_detector_mirrored)
+--hs.hotkey.bind({"cmd", "alt", "ctrl"}, "S", screen_detector_mirrored)
 --
 
 --
@@ -60,10 +49,8 @@ hs.hotkey.bind({"cmd", "alt", "ctrl"}, "S", screen_detector_mirrored)
 --
 hs.hotkey.bind({"cmd", "alt", "ctrl"}, "H", function()
     hs.hints.windowHints()
-   
 end)
 --
-
 
 
 --
@@ -118,12 +105,11 @@ function batt_watch_low()
     pct = hs.battery.percentage()
     if pct ~= pct_prev and not hs.battery.isCharging() and pct < 42 then
         hs.alert.show(string.format(
-        "Andre: Plug-in the power, only %d%% left!!", pct))
+        "Plug-in the power, only %d%% left!!", pct))
     end
     pct_prev = pct
 end
 --------------------------------------------------
-
 
 -----------------------------------------------------------------------------
 -- Called by the "changed" watcher wrapper,
