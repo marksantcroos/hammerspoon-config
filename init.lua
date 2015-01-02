@@ -7,15 +7,29 @@ end)
 --
 
 --
--- Screen detection stuff in mirrored mode, where there is only one screen.
 -- Names: 'Color LCD' and 'DELL U2713HM'
 --
-local prev_name = ''
-local internal_orig_brightness = 100
-function screen_handler_mirrored()
-
+local internal_orig_brightness = 42
+function screen_handler(name)
     SCREEN_NAME_INTERNAL = 'Color LCD'
     SCREEN_NAME_EXTERNAL = 'DELL U2713HM'
+
+    if name == SCREEN_NAME_INTERNAL then
+        hs.alert.show("Internal screen detected!")
+        hs.brightness.set(internal_original_brightness)
+    elseif name == SCREEN_NAME_EXTERNAL then
+        hs.alert.show("External screen detected!")
+        internal_original_brightness = hs.brightness.get()
+        hs.brightness.set(0)
+    end
+
+end
+
+--
+-- Screen detection stuff in mirrored mode, where there is only one screen.
+--
+local prev_name = ''
+function screen_detector_mirrored()
 
     all_screens = hs.screen.allScreens()
 
@@ -24,23 +38,21 @@ function screen_handler_mirrored()
         return
     end
 
+    -- Assuming we have only one screen, get the "vendor name".
     name = hs.screen.name(all_screens[1])
 
+    -- If different than before or initial run
     if name ~= prev_name or not prev_name then
-        if name == SCREEN_NAME_INTERNAL then
-            hs.alert.show("Internal screen detected!")
-            hs.brightness.set(internal_original_brightness)
-        elseif name == SCREEN_NAME_EXTERNAL then
-            hs.alert.show("External screen detected!")
-            internal_original_brightness = hs.brightness.get()
-            hs.brightness.set(0)
-        end
+        -- Use external handler to keep this function generic
+        screen_handler(name)
+
+        -- Store name
         prev_name = name
     end
 
 end
-hs.screen.watcher.new(screen_handler_mirrored):start()
-hs.hotkey.bind({"cmd", "alt", "ctrl"}, "S", screen_handler_mirrored)
+hs.screen.watcher.new(screen_detector_mirrored):start()
+hs.hotkey.bind({"cmd", "alt", "ctrl"}, "S", screen_detector_mirrored)
 --
 
 --
