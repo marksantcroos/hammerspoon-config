@@ -7,6 +7,43 @@ end)
 --
 
 --
+-- Screen detection stuff in mirrored mode, where there is only one screen.
+-- Names: 'Color LCD' and 'DELL U2713HM'
+--
+local prev_name = ''
+local internal_orig_brightness = 100
+function screen_handler_mirrored()
+
+    SCREEN_NAME_INTERNAL = 'Color LCD'
+    SCREEN_NAME_EXTERNAL = 'DELL U2713HM'
+
+    all_screens = hs.screen.allScreens()
+
+    if #all_screens ~= 1 then
+        hs.alert.show("More than one screen detected!\nNot in mirrored mode?")
+        return
+    end
+
+    name = hs.screen.name(all_screens[1])
+
+    if name ~= prev_name or not prev_name then
+        if name == SCREEN_NAME_INTERNAL then
+            hs.alert.show("Internal screen detected!")
+            hs.brightness.set(internal_original_brightness)
+        elseif name == SCREEN_NAME_EXTERNAL then
+            hs.alert.show("External screen detected!")
+            internal_original_brightness = hs.brightness.get()
+            hs.brightness.set(0)
+        end
+        prev_name = name
+    end
+
+end
+hs.screen.watcher.new(screen_handler_mirrored):start()
+hs.hotkey.bind({"cmd", "alt", "ctrl"}, "S", screen_handler_mirrored)
+--
+
+--
 -- Hints!
 --
 hs.hotkey.bind({"cmd", "alt", "ctrl"}, "H", function()
